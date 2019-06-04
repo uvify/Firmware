@@ -44,6 +44,7 @@
 #include <px4_config.h>
 #include <px4_getopt.h>
 #include <px4_work_queue/ScheduledWorkItem.hpp>
+#include <px4_cli.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -695,9 +696,17 @@ cm8jl65_main(int argc, char *argv[])
 
 	while ((ch = px4_getopt(argc, argv, "R:d:", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
-		case 'R':
-			rotation = (uint8_t)atoi(myoptarg);
-			break;
+		case 'R': {
+				int rot = -1;
+
+				if (px4_get_parameter_value(myoptarg, rot) != 0) {
+					PX4_ERR("rotation parsing failed");
+					return -1;
+				}
+
+				rotation = (uint8_t)rot;
+				break;
+			}
 
 		case 'd':
 			device_path = myoptarg;
