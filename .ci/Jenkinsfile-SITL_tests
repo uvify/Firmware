@@ -96,7 +96,7 @@ pipeline {
             [
               name: "MC_safe_landing",
               test: "mavros_posix_test_safe_landing.test",
-              mission: "avoidance",
+              mission: "MC_safe_landing",
               vehicle: "iris_obs_avoid",
               run_script: "rostest_avoidance_run.sh"
             ],
