@@ -14,9 +14,9 @@
         "hoverSpeed": 5,
         "items": [
             {
-                "AMSLAltAboveTerrain": 4,
-                "Altitude": 4,
-                "AltitudeMode": 0,
+                "AMSLAltAboveTerrain": 18,
+                "Altitude": 18,
+                "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 22,
                 "doJumpId": 1,
@@ -28,14 +28,14 @@
                     null,
                     47.3977432,
                     8.5456085,
-                    4
+                    18
                 ],
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": 4,
-                "Altitude": 4,
-                "AltitudeMode": 0,
+                "AMSLAltAboveTerrain": 18,
+                "Altitude": 18,
+                "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 16,
                 "doJumpId": 2,
@@ -45,14 +45,14 @@
                     0,
                     0,
                     null,
-                    47.397746831203335,
-                    8.545425888887507,
-                    4
+                    47.397737922000374,
+                    8.54579554484252,
+                    18
                 ],
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": null,
+                "AMSLAltAboveTerrain": 0,
                 "Altitude": 0,
                 "AltitudeMode": 1,
                 "autoContinue": true,
@@ -64,17 +64,17 @@
                     0,
                     0,
                     null,
-                    47.39774592340412,
-                    8.545425224471188,
+                    47.397739737599075,
+                    8.545798227048493,
                     0
                 ],
                 "type": "SimpleItem"
             }
         ],
         "plannedHomePosition": [
-            47.397746260998275,
-            8.545608841117314,
-            489
+            47.3977421,
+            8.545594,
+            488.028
         ],
         "vehicleType": 2,
         "version": 2
