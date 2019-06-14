@@ -5,7 +5,7 @@
     <arg name="est" default="ekf2"/>
     <arg name="gui" default="false"/>
     <arg name="interactive" default="false"/>
-    <arg name="mission" default="safe_landing"/>
+    <arg name="mission" default="MC_safe_landing"/>
     <arg name="sdf" default="$(find avoidance)/sim/models/iris_downwards_camera/iris_downwards_camera.sdf"/>
     <arg name="vehicle" default="iris_obs_avoid"/>
     <arg name="world" default="$(find avoidance)/sim/worlds/boxes1.world"/>
