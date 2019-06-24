@@ -10,3 +10,4 @@ float32 yaw
 float32 yaw_speed
 
 bool point_valid
+uint16 type
