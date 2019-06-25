@@ -332,8 +332,8 @@ void PositionControl::updateConstraints(const vehicle_constraints_s &constraints
 	// constraints, then just use global constraints for the limits.
 
 	if (!PX4_ISFINITE(constraints.tilt)
-	    || !(constraints.tilt < math::max(_param_mpc_tiltmax_air.get(), _param_mpc_man_tilt_max.get()))) {
-		_constraints.tilt = math::max(_param_mpc_tiltmax_air.get(), _param_mpc_man_tilt_max.get());
+	    || !(constraints.tilt < math::radians(math::max(_param_mpc_tiltmax_air.get(), _param_mpc_man_tilt_max.get())))) {
+		_constraints.tilt = math::radians(math::max(_param_mpc_tiltmax_air.get(), _param_mpc_man_tilt_max.get()));
 	}
 
 	if (!PX4_ISFINITE(constraints.speed_up) || !(constraints.speed_up < _param_mpc_z_vel_max_up.get())) {
@@ -352,8 +352,4 @@ void PositionControl::updateConstraints(const vehicle_constraints_s &constraints
 void PositionControl::updateParams()
 {
 	ModuleParams::updateParams();
-
-	// Tilt needs to be in radians
-	_param_mpc_tiltmax_air.set(math::radians(_param_mpc_tiltmax_air.get()));
-	_param_mpc_man_tilt_max.set(math::radians(_param_mpc_man_tilt_max.get()));
 }
