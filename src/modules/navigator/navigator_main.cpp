@@ -117,15 +117,6 @@ Navigator::~Navigator()
 }
 
 void
-Navigator::vehicle_status_update()
-{
-	if (_vstatus_sub.update(&_vstatus)) {
-		/* in case the commander is not be running */
-		_vstatus.arming_state = vehicle_status_s::ARMING_STATE_STANDBY;
-	}
-}
-
-void
 Navigator::params_update()
 {
 	parameter_update_s param_update;
@@ -156,8 +147,6 @@ Navigator::run()
 		_geofence.loadFromFile(GEOFENCE_FILENAME);
 	}
 
-	/* copy all topics first time */
-	vehicle_status_update();
 	params_update();
 
 	/* wakeup source(s) */
@@ -218,7 +207,7 @@ Navigator::run()
 			params_update();
 		}
 
-		vehicle_status_update();
+		_vstatus_sub.update(&_vstatus);
 		_land_detected_sub.update(&_land_detected);
 		_position_controller_status_sub.update();
 		_home_pos_sub.update(&_home_pos);
@@ -763,6 +752,9 @@ Navigator::get_default_altitude_acceptance_radius()
 {
 	if (get_vstatus()->vehicle_type == vehicle_status_s::VEHICLE_TYPE_FIXED_WING) {
 		return _param_nav_fw_alt_rad.get();
+
+	} else if (get_vstatus()->vehicle_type == vehicle_status_s::VEHICLE_TYPE_ROVER) {
+		return INFINITY;
 
 	} else {
 		float alt_acceptance_radius = _param_nav_mc_alt_rad.get();
