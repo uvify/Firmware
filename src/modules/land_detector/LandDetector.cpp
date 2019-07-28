@@ -58,10 +58,11 @@ LandDetector::LandDetector() :
 	ScheduledWorkItem(px4::wq_configurations::hp_default)
 {
 	_landDetected.timestamp = hrt_absolute_time();
-	_landDetected.freefall = false;
 	_landDetected.landed = true;
-	_landDetected.ground_contact = false;
+	_landDetected.freefall = false;
 	_landDetected.maybe_landed = false;
+	_landDetected.ground_contact = false;
+	_landDetected.in_ground_effect = false;
 }
 
 LandDetector::~LandDetector()
