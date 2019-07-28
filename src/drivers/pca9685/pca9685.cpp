@@ -96,11 +96,11 @@
 
 #define PCA9685_DEVICE_PATH "/dev/pca9685"
 #define PCA9685_BUS PX4_I2C_BUS_EXPANSION
-#define PCA9685_PWMFREQ 60.0f
+#define PCA9685_PWMFREQ 100.0f
 #define PCA9685_NCHANS 16 // total amount of pwm outputs
 
-#define PCA9685_PWMMIN 150 // this is the 'minimum' pulse length count (out of 4096)
-#define PCA9685_PWMMAX 600 // this is the 'maximum' pulse length count (out of 4096)_PWMFREQ 60.0f
+#define PCA9685_PWMMIN 1 // this is the 'minimum' pulse length count (out of 4096)
+#define PCA9685_PWMMAX 4000 // this is the 'maximum' pulse length count (out of 4096)_PWMFREQ 60.0f
 
 #define PCA9685_PWMCENTER ((PCA9685_PWMMAX + PCA9685_PWMMIN)/2)
 #define PCA9685_MAXSERVODEG 90.0f /* maximal servo deflection in degrees
@@ -138,6 +138,10 @@ private:
 	struct actuator_controls_s  _actuator_controls;
 	uint16_t	    	_current_values[actuator_controls_s::NUM_ACTUATOR_CONTROLS]; /**< stores the current pwm output
 										  values as sent to the setPin() */
+
+        unsigned int rgbColor[3];
+	int decColor, incColor;
+	unsigned int loopEntered;
 
 	bool _mode_on_initialized;  /** Set to true after the first call of i2cpwm in mode IOX_MODE_ON */
 
@@ -194,6 +198,14 @@ PCA9685::PCA9685(int bus, uint8_t address) :
 	_actuator_controls(),
 	_mode_on_initialized(false)
 {
+	rgbColor[0] = 4096;
+	rgbColor[1] = 0;
+	rgbColor[2] = 0;
+
+	incColor = 0;
+	decColor = 0;
+	loopEntered = 0;
+
 	memset(_msg, 0, sizeof(_msg));
 	memset(_current_values, 0, sizeof(_current_values));
 }
@@ -290,7 +302,27 @@ void
 PCA9685::Run()
 {
 	if (_mode == IOX_MODE_TEST_OUT) {
-		setPin(0, PCA9685_PWMCENTER);
+
+		if(decColor > 2) {
+			decColor = 0;
+			rgbColor[0] = PCA9685_PWMMAX;
+			rgbColor[1] = 0;
+			rgbColor[2] = 0;
+		}
+
+		if(loopEntered++ < 500) {
+			incColor = decColor == 2 ? 0 : decColor + 1;
+			rgbColor[decColor] -= 8;
+			rgbColor[incColor] += 8;
+		} else {
+			loopEntered = 0;
+			decColor += 1;
+		}
+
+		setPin(0, rgbColor[0]/4);
+		setPin(1, rgbColor[1]/4);
+		setPin(2, rgbColor[2]/4);
+
 		_should_run = true;
 
 	} else if (_mode == IOX_MODE_OFF) {
