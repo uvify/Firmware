@@ -2,6 +2,25 @@
 #
 # UVify UVF4 specific board sensors init
 #------------------------------------------------------------------------------
+# Draco
+if param compare SYS_AUTOSTART 4300
+then
+   mpu9250 -R 2 start
+fi
+
+# IFO
+if param compare SYS_AUTOSTART 4301
+then
+   # IFO GPS LED
+   rgbled_ncp5623c start -a 0x38
+   
+   # IFO rgb LED
+   pca9685 start
+
+   mpu9250 -R 2 start
+   lis3mdl -R 2 -X start
+fi
+
 # Draco-R
 if param compare SYS_AUTOSTART 6002
 then
@@ -17,21 +36,4 @@ then
    lis3mdl -R 2 -X start
 fi
 
-# Draco
-if param compare SYS_AUTOSTART 4052
-then
-   mpu9250 -R 2 start
-fi
 
-# IFO
-if param compare SYS_AUTOSTART 4053
-then
-   # IFO GPS LED
-   rgbled_ncp5623c start -a 0x38
-   
-   # IFO rgb LED
-   pca9685 start
-
-   mpu9250 -R 2 start
-   lis3mdl -R 2 -X start
-fi
