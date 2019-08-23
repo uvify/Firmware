@@ -12,6 +12,11 @@
 # @output MAIN5 motor 5
 # @output MAIN6 motor 6
 #
+# @board px4fmu-v2 exclude
+# @board px4fmu-v3 exclude
+# @board px4fmu-v4pro exclude
+# @board px4fmu-v5 exclude
+#
 # @output AUX1 feed-through of RC AUX1 channel
 # @output AUX2 feed-through of RC AUX2 channel
 #
@@ -146,5 +151,6 @@ then
 	# Enable external magnetometer sensor
 	param set CAL_MAG1_EN 1
 fi
+
 
 
