@@ -291,7 +291,7 @@
 
 /* For,this signal is active high. */
 #define GPIO_SBUS_INV                (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN13)
-#define BOARD_INVERT_RC_INPUT(_invert_true, _na) px4_arch_gpiowrite(GPIO_SBUS_INV, _invert_true)
+#define RC_INVERT_INPUT(_invert_true) px4_arch_gpiowrite(GPIO_SBUS_INV, _invert_true)
 
 /* Heater pins (reserved) */
 #define GPIO_HEATER_INPUT            (GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTC|GPIO_PIN6)

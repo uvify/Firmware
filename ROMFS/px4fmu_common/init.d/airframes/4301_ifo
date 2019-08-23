@@ -79,7 +79,7 @@ then
         param set MPC_Z_VEL_D 0.00000
 
         param set MPC_THR_MIN 0.06000
-        param set MPC_THR_MAX 0.40000
+        #param set MPC_THR_MAX 1.00000
         param set MPC_THR_HOVER 0.3000
 
         param set MIS_TAKEOFF_ALT 1.1000
@@ -90,7 +90,6 @@ then
         param set MPC_TKO_RAMP_T 1.0000
         param set MPC_TKO_SPEED 1.1000
         param set MPC_VEL_MANUAL 3.0000
-
 
 	param set BAT_SOURCE 0
 	param set BAT_N_CELLS 4
@@ -123,4 +122,7 @@ then
 	param set MAV_1_CONFIG 102	# TELEM 2
 	param set MAV_1_MODE 0
 	param set MAV_1_RATE 0
+
+	# Ground effect compensation for barometer
+	param set EKF2_GND_EFF_DZ 6.0
 fi
