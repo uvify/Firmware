@@ -28,7 +28,7 @@ then
    ms5611 -T 0 -X start
 
    # This is a IFO LED bulb test mode
-   #pca9685 test
+   pca9685 test
 fi
 
 # Draco-R

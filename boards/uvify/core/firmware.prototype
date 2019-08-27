@@ -1,5 +1,5 @@
 {
-    "board_id": 20,
+    "board_id": 11,
     "magic": "UVFYCORE",
     "description": "Firmware for the UVify Core flight controller",
     "image": "",
