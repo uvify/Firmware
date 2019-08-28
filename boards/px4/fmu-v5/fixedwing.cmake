@@ -36,6 +36,7 @@ px4_add_board(
 		px4fmu
 		px4io
 		rc_input
+		safety_button
 		stm32
 		stm32/adc
 		stm32/tone_alarm
@@ -58,7 +59,7 @@ px4_add_board(
 		navigator
 		sensors
 		vmount
-		wind_estimator
+		airspeed_selector
 
 	SYSTEMCMDS
 		bl_update
