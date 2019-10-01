@@ -6,6 +6,9 @@
 # Draco-R
 if param compare SYS_AUTOSTART 6002
 then
+	# IFO GPS LED
+	rgbled_ncp5623c start -a 0x38
+
 	# Barometer
 	# Internal SPI
 	ms5611 -T 0 -s start
