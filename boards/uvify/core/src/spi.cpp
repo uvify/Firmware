@@ -47,30 +47,7 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		initSPIDevice(DRV_BARO_DEVTYPE_MS5611, SPI::CS{GPIO::PortD, GPIO::Pin7}),
 		initSPIDevice(DRV_FLOW_DEVTYPE_PMW3901, SPI::CS{GPIO::PortB, GPIO::Pin12}),
 	}),
-	initSPIBusExternal(SPI::Bus::SPI4, {
-		SPI::CS{GPIO::PortA, GPIO::Pin8},
-	}),
 };
 
 static constexpr bool unused = validateSPIConfig(px4_spi_buses);
-
-__EXPORT bool board_has_bus(enum board_bus_types type, uint32_t bus)
-{
-	bool rv = true;
-
-	switch (type) {
-	case BOARD_SPI_BUS:
-#ifdef CONFIG_STM32_SPI4
-		rv = bus != 4 || (stm32_gpioread(GPIO_PB4) == 0);
-#endif /* CONFIG_STM32_SPI4 */
-		break;
-
-	case BOARD_I2C_BUS:
-		break;
-
-	default: break;
-	}
-
-	return rv;
-}
 
