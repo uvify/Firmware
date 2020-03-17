@@ -57,7 +57,7 @@
 
 #define SEC2USEC 1000000.0f
 
-#define STATE_TIMEOUT 10000000 // [us] Maximum time to spend in any state
+#define STATE_TIMEOUT 20000000 // [us] Maximum time to spend in any state
 
 PrecLand::PrecLand(Navigator *navigator) :
 	MissionBlock(navigator),
@@ -76,26 +76,51 @@ PrecLand::on_activation()
 	_search_cnt = 0;
 	_last_slewrate_time = 0;
 
+	_vstatus_updated = _vehicle_status_flags_sub.update(&_vstatus_flags);
+
 	vehicle_local_position_s *vehicle_local_position = _navigator->get_local_position();
+
+	if (_vstatus_flags.condition_global_position_valid) {
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "Global Position is valid");
+	} else {
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "Global Position is not valid");
+	}
 
 	if (!map_projection_initialized(&_map_ref)) {
 		map_projection_init(&_map_ref, vehicle_local_position->ref_lat, vehicle_local_position->ref_lon);
 	}
+	if (!globallocalconverter_initialized()) {
+		globallocalconverter_init(vehicle_local_position->ref_lat, vehicle_local_position->ref_lon, vehicle_local_position->ref_alt,
+					hrt_absolute_time());
+	}
+
+	// int globallocalconverter_tolocal(double lat, double lon, float alt, float *x, float *y, float *z)
 
 	position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
 
 	pos_sp_triplet->next.valid = false;
 
+	double lat, lon;
+	map_projection_reproject(&_map_ref, vehicle_local_position->x , vehicle_local_position->y, &lat, &lon);
+
 	// Check that the current position setpoint is valid, otherwise land at current position
 	if (!pos_sp_triplet->current.valid) {
-		PX4_WARN("Resetting landing position to current position");
-		pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
-		pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
-		pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "Resetting landing position to current position");
+
+		if (_vstatus_flags.condition_global_position_valid) {
+			pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
+			pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
+			pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+		} else if (map_projection_initialized(&_map_ref)) {
+			pos_sp_triplet->current.lat = lat;
+			pos_sp_triplet->current.lon = lon;
+			pos_sp_triplet->current.alt = vehicle_local_position->ref_alt - vehicle_local_position->z;
+		} else {
+			mavlink_log_critical(_navigator->get_mavlink_log_pub(), "Failed to set landing position to current position");
+		}
 		pos_sp_triplet->current.valid = true;
 		pos_sp_triplet->current.timestamp = hrt_absolute_time();
 	}
-
 	_sp_pev = matrix::Vector2f(0, 0);
 	_sp_pev_prev = matrix::Vector2f(0, 0);
 	_last_slewrate_time = 0;
@@ -108,6 +133,8 @@ PrecLand::on_active()
 {
 	// get new target measurement
 	_target_pose_updated = _target_pose_sub.update(&_target_pose);
+
+	_vstatus_updated = _vehicle_status_flags_sub.update(&_vstatus_flags);
 
 	if (_target_pose_updated) {
 		_target_pose_valid = true;
@@ -183,16 +210,40 @@ PrecLand::run_state_start()
 	if (_mode == PrecLandMode::Opportunistic) {
 		// could not see the target immediately, so just fall back to normal landing
 		if (!switch_to_state_fallback()) {
-			PX4_ERR("Can't switch to search or fallback landing");
+			mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to search or fallback landing");
 		}
 	}
 
+	// Seunghwan - Not sure why this precland is using global positions instead of locals.
+	// Self Answer  - Stupid Flight Task Code only can take care of Global Coordinates.
 	position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
-	float dist = get_distance_to_next_waypoint(pos_sp_triplet->current.lat, pos_sp_triplet->current.lon,
+	// float dist = get_distance_to_next_waypoint(pos_sp_triplet->current.lat, pos_sp_triplet->current.lon,
+	// 		_navigator->get_global_position()->lat, _navigator->get_global_position()->lon);
+
+
+	// Method 2 - Using Local Position, does not work
+	// float dist_xy, dist_z;
+	// float dist = mavlink_wpm_distance_to_point_local(pos_sp_triplet->current.x, pos_sp_triplet->current.y, pos_sp_triplet->current.z,
+	// 			_navigator->get_local_position()->x, _navigator->get_local_position()->y, _navigator->get_local_position()->z, &dist_xy, &dist_z);
+
+	float dist;
+
+	if (_vstatus_flags.condition_global_position_valid) {
+		dist = get_distance_to_next_waypoint(pos_sp_triplet->current.lat, pos_sp_triplet->current.lon,
 			_navigator->get_global_position()->lat, _navigator->get_global_position()->lon);
+	} else {
+		double lon_vehicle, lat_vehicle;
+		map_projection_reproject(&_map_ref, _navigator->get_local_position()->x , _navigator->get_local_position()->y, &lat_vehicle, &lon_vehicle);
+		// float alt_vehicle;
+		// globallocalconverter_toglobal(_navigator->get_local_position()->x, _navigator->get_local_position()->y, _navigator->get_local_position()->z, &lat_vehicle, &lon_vehicle, &alt_vehicle);
+		dist = get_distance_to_next_waypoint(pos_sp_triplet->current.lat, pos_sp_triplet->current.lon,
+						lat_vehicle, lon_vehicle);
+	}
 
 	// check if we've reached the start point
 	if (dist < _navigator->get_acceptance_radius()) {
+		mavlink_log_info(_navigator->get_mavlink_log_pub(),"Check Succedded dist : %f < %f", (double)dist, (double) _navigator->get_acceptance_radius() );
+
 		if (!_point_reached_time) {
 			_point_reached_time = hrt_absolute_time();
 		}
@@ -203,16 +254,19 @@ PrecLand::run_state_start()
 			if (hrt_absolute_time() - _point_reached_time > 2000000) {
 				if (!switch_to_state_search()) {
 					if (!switch_to_state_fallback()) {
-						PX4_ERR("Can't switch to search or fallback landing");
+						mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to search or fallback landing");
 					}
 				}
 			}
 
 		} else {
 			if (!switch_to_state_fallback()) {
-				PX4_ERR("Can't switch to search or fallback landing");
+				mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to search or fallback landing");
 			}
 		}
+	} else {
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Check Failed, dist : %f > %f", (double)dist, (double) _navigator->get_acceptance_radius());
+
 	}
 }
 
@@ -223,16 +277,24 @@ PrecLand::run_state_horizontal_approach()
 
 	// check if target visible, if not go to start
 	if (!check_state_conditions(PrecLandState::HorizontalApproach)) {
-		PX4_WARN("Lost landing target while landing (horizontal approach).");
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Lost landing target while horizontal approach.");
 
 		// Stay at current position for searching for the landing target
-		pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
-		pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
-		pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+		if (_vstatus_flags.condition_global_position_valid) {
+			pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
+			pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
+			pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+		} else {
+			double lon_tmp, lat_tmp;
+			map_projection_reproject(&_map_ref, _navigator->get_local_position()->x , _navigator->get_local_position()->y, &lat_tmp, &lon_tmp);
+			pos_sp_triplet->current.lat = lat_tmp;
+			pos_sp_triplet->current.lon = lon_tmp;
+			pos_sp_triplet->current.alt = _navigator->get_local_position()->ref_alt - _navigator->get_local_position()->z;
+		}
 
 		if (!switch_to_state_start()) {
 			if (!switch_to_state_fallback()) {
-				PX4_ERR("Can't switch to fallback landing");
+				mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to fallback landing");
 			}
 		}
 
@@ -254,13 +316,13 @@ PrecLand::run_state_horizontal_approach()
 	}
 
 	if (hrt_absolute_time() - _state_start_time > STATE_TIMEOUT) {
-		PX4_ERR("Precision landing took too long during horizontal approach phase.");
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Precision landing took too long during horizontal approach phase.");
 
 		if (switch_to_state_fallback()) {
 			return;
 		}
 
-		PX4_ERR("Can't switch to fallback landing");
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to fallback landing");
 	}
 
 	float x = _target_pose.x_abs;
@@ -288,16 +350,24 @@ PrecLand::run_state_descend_above_target()
 	// check if target visible
 	if (!check_state_conditions(PrecLandState::DescendAboveTarget)) {
 		if (!switch_to_state_final_approach()) {
-			PX4_WARN("Lost landing target while landing (descending).");
+			mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Lost landing target while landing (descending).");
 
 			// Stay at current position for searching for the target
+			if (_vstatus_flags.condition_global_position_valid) {
 			pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
 			pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
 			pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+			} else {
+			double lon_tmp, lat_tmp;
+			map_projection_reproject(&_map_ref, _navigator->get_local_position()->x , _navigator->get_local_position()->y, &lat_tmp, &lon_tmp);
+			pos_sp_triplet->current.lat = lat_tmp;
+			pos_sp_triplet->current.lon = lon_tmp;
+			pos_sp_triplet->current.alt = _navigator->get_local_position()->ref_alt - _navigator->get_local_position()->z;
+			}
 
 			if (!switch_to_state_start()) {
 				if (!switch_to_state_fallback()) {
-					PX4_ERR("Can't switch to fallback landing");
+					mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to fallback landing");
 				}
 			}
 		}
@@ -349,10 +419,10 @@ PrecLand::run_state_search()
 
 	// check if search timed out and go to fallback
 	if (hrt_absolute_time() - _state_start_time > _param_pld_srch_tout.get()*SEC2USEC) {
-		PX4_WARN("Search timed out");
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Search timed out");
 
 		if (!switch_to_state_fallback()) {
-			PX4_ERR("Can't switch to fallback landing");
+			mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Can't switch to fallback landing");
 		}
 	}
 }
@@ -368,7 +438,7 @@ PrecLand::switch_to_state_start()
 {
 	if (check_state_conditions(PrecLandState::Start)) {
 		position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
-		pos_sp_triplet->current.type = position_setpoint_s::SETPOINT_TYPE_POSITION;
+		pos_sp_triplet->current.type = position_setpoint_s::SETPOINT_TYPE_LOITER;
 		_navigator->set_position_setpoint_triplet_updated();
 		_search_cnt++;
 
@@ -386,7 +456,15 @@ bool
 PrecLand::switch_to_state_horizontal_approach()
 {
 	if (check_state_conditions(PrecLandState::HorizontalApproach)) {
-		_approach_alt = _navigator->get_global_position()->alt;
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "[PrecLand] Switching to Horizontal Approach");
+		if (_vstatus_flags.condition_global_position_valid) {
+			_approach_alt = _navigator->get_global_position()->alt;
+		} else if (_vstatus_flags.condition_local_position_valid) {
+			_approach_alt = _navigator->get_local_position()->ref_alt - _navigator->get_local_position()->z;
+		} else {
+			mavlink_log_critical(_navigator->get_mavlink_log_pub(),"Global & Local Position invalid");
+			return false;
+		}
 
 		_point_reached_time = 0;
 
@@ -402,6 +480,7 @@ bool
 PrecLand::switch_to_state_descend_above_target()
 {
 	if (check_state_conditions(PrecLandState::DescendAboveTarget)) {
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "[PrecLand] Switch to Descend");
 		_state = PrecLandState::DescendAboveTarget;
 		_state_start_time = hrt_absolute_time();
 		return true;
@@ -416,6 +495,7 @@ PrecLand::switch_to_state_final_approach()
 	if (check_state_conditions(PrecLandState::FinalApproach)) {
 		_state = PrecLandState::FinalApproach;
 		_state_start_time = hrt_absolute_time();
+		mavlink_log_critical(_navigator->get_mavlink_log_pub(), "[PrecLand] Switch to Final Approach");
 		return true;
 	}
 
@@ -425,7 +505,7 @@ PrecLand::switch_to_state_final_approach()
 bool
 PrecLand::switch_to_state_search()
 {
-	PX4_INFO("Climbing to search altitude.");
+	mavlink_log_critical(_navigator->get_mavlink_log_pub(), "[PrecLand] Climbing to Search Altitude");
 	vehicle_local_position_s *vehicle_local_position = _navigator->get_local_position();
 
 	position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
@@ -445,9 +525,19 @@ PrecLand::switch_to_state_fallback()
 {
 	PX4_WARN("Falling back to normal land.");
 	position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
-	pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
-	pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
-	pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+
+	if (_vstatus_flags.condition_global_position_valid) {
+		pos_sp_triplet->current.lat = _navigator->get_global_position()->lat;
+		pos_sp_triplet->current.lon = _navigator->get_global_position()->lon;
+		pos_sp_triplet->current.alt = _navigator->get_global_position()->alt;
+	} else {
+		double lon_tmp, lat_tmp;
+		map_projection_reproject(&_map_ref, _navigator->get_local_position()->x , _navigator->get_local_position()->y, &lat_tmp, &lon_tmp);
+		pos_sp_triplet->current.lat = lat_tmp;
+		pos_sp_triplet->current.lon = lon_tmp;
+		pos_sp_triplet->current.alt = _navigator->get_local_position()->ref_alt - _navigator->get_local_position()->z;
+	}
+
 	pos_sp_triplet->current.type = position_setpoint_s::SETPOINT_TYPE_LAND;
 	_navigator->set_position_setpoint_triplet_updated();
 

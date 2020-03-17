@@ -604,7 +604,9 @@ Navigator::run()
 
 		case vehicle_status_s::NAVIGATION_STATE_AUTO_LAND:
 			_pos_sp_triplet_published_invalid_once = false;
-			navigation_mode_new = &_land;
+			// navigation_mode_new = &_land;
+			navigation_mode_new = &_precland;
+			_precland.set_mode(PrecLandMode::Required);
 			break;
 
 		case vehicle_status_s::NAVIGATION_STATE_AUTO_PRECLAND:

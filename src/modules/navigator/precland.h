@@ -45,6 +45,7 @@
 #include <px4_platform_common/module_params.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/landing_target_pose.h>
+#include <uORB/topics/vehicle_status_flags.h>
 
 #include "navigator_mode.h"
 #include "mission_block.h"
@@ -107,6 +108,10 @@ private:
 	uORB::Subscription _target_pose_sub{ORB_ID(landing_target_pose)};
 	bool _target_pose_valid{false}; /**< whether we have received a landing target position message */
 	bool _target_pose_updated{false}; /**< wether the landing target position message is updated */
+
+	uORB::Subscription _vehicle_status_flags_sub{ORB_ID(vehicle_status_flags)};
+	vehicle_status_flags_s _vstatus_flags{};
+	bool _vstatus_updated{false}; /**< whether we have received a vehicle_status_flags message */
 
 	struct map_projection_reference_s _map_ref {}; /**< reference for local/global projections */
 
