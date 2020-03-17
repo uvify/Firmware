@@ -214,17 +214,9 @@ PrecLand::run_state_start()
 		}
 	}
 
-	// Seunghwan - Not sure why this precland is using global positions instead of locals.
-	// Self Answer  - Stupid Flight Task Code only can take care of Global Coordinates.
+	// Not sure why this precland is using global positions instead of locals.
+	// Self Answer  - Stupid Flight Task Auto code only can take care of Global Coordinates.
 	position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
-	// float dist = get_distance_to_next_waypoint(pos_sp_triplet->current.lat, pos_sp_triplet->current.lon,
-	// 		_navigator->get_global_position()->lat, _navigator->get_global_position()->lon);
-
-
-	// Method 2 - Using Local Position, does not work
-	// float dist_xy, dist_z;
-	// float dist = mavlink_wpm_distance_to_point_local(pos_sp_triplet->current.x, pos_sp_triplet->current.y, pos_sp_triplet->current.z,
-	// 			_navigator->get_local_position()->x, _navigator->get_local_position()->y, _navigator->get_local_position()->z, &dist_xy, &dist_z);
 
 	float dist;
 
