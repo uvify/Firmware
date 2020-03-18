@@ -54,6 +54,7 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 
 static constexpr bool unused = validateSPIConfig(px4_spi_buses);
 
+#if defined(BOARD_HAS_BUS_MANIFEST)
 __EXPORT bool board_has_bus(enum board_bus_types type, uint32_t bus)
 {
 	bool rv = true;
@@ -73,4 +74,4 @@ __EXPORT bool board_has_bus(enum board_bus_types type, uint32_t bus)
 
 	return rv;
 }
-
+#endif
