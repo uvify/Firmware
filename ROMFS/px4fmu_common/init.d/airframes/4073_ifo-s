@@ -98,6 +98,7 @@ then
 
 	# SMBUS-based smart battery
 	param set SENS_EN_BATT 1	# enable batt_smbus.
+	param set BAT_C_MULT	5.0	# UVify smart battery has 5.0x multipliea for both current and capacity.
 
 	# Battery - analog fallback
 	param set BAT1_SOURCE 1		# set first battery source as external.
