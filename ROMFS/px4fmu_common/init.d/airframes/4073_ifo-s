@@ -24,93 +24,91 @@ set VEHICLE_TYPE mc
 set MIXER quad_x
 set PWM_OUT 1234
 
+# Increase this when material update happens and requires user update their parameter related to airframes.
+set PARAM_DEFAULTS_VER 2
+
 if [ $AUTOCNF = yes ]
 then
-	# Attitude & rate gains
-	#param set MC_ROLL_P 7.00000
-	param set MC_ROLLRATE_P 0.15000
-	#param set MC_ROLLRATE_I 0.90000
-	param set MC_ROLLRATE_D 0.00130
+	# Attitude & rate gains, Roll.
+	param set MC_ROLL_P 6.5
+	param set MC_ROLLRATE_P 0.15
+	param set MC_ROLLRATE_I 0.2
+	param set MC_ROLLRATE_D 0.0013
 
-	#param set MC_PITCH_P 7.00000
-	param set MC_PITCHRATE_P 0.15000
-	#param set MC_PITCHRATE_I 1.10000
-	param set MC_PITCHRATE_D 0.00160
+	# Pitch.
+	param set MC_PITCH_P 6.5
+	param set MC_PITCHRATE_P 0.15
+	param set MC_PITCHRATE_I 0.2
+	param set MC_PITCHRATE_D 0.0016
 
+	# Yaw.
 	param set MC_YAW_P 2.8
 	param set MC_YAWRATE_P 0.2
-	#param set MC_YAWRATE_I 0.15
+	param set MC_YAWRATE_I 0.1
 	param set MC_YAWRATE_D 0.0
 
-	#param set MC_ROLL_TC 0.19
-	#param set MC_PITCH_TC 0.16
+	# We'd like to make sure this critical flight params to be constant. Not adjusted by other developers.
+	param set MC_ROLLRATE_MAX 220.0
+	param set MC_PITCHRATE_MAX 220.0
+	param set MPC_MAN_TILT_MAX 35.0
+	param set MC_YAWRATE_MAX 200.0
+	param set MPC_MANTHR_MIN 0.08
+	param set MPC_TILTMAX_AIR 45.0
 
-	# Manual mode settings: Unleash Draco R's power :)
-	#param set MPC_MAN_TILT_MAX 70.00000
-	#param set MC_PITCHRATE_MAX 1600.00000
-	#param set MC_ROLLRATE_MAX 1600.00000
-	#param set MC_YAWRATE_MAX 700.00000
-	param set MPC_MANTHR_MIN 0.08000
-	#param set MPC_MAN_TILT_MAX 35.0000
-	#param set MPC_TILTMAX_AIR 20.0000
-
-	# Disable RC filtering
+	# Disable RC filtering.
 	param set RC_FLT_CUTOFF 0.00000
-
-	# Filter settings
-	param set IMU_GYRO_CUTOFF 100.00000
 
 	# Thrust curve (avoids the need for TPA)
 	#param set THR_MDL_FAC 0.25
 
-	# Obsolete
-	#param set PWM_MAX 1950
-	#param set PWM_MIN 1100
-	#param set PWM_RATE 0
-
-	# Sensors
+	# Board orientation.
 	param set SENS_BOARD_ROT 10
-	# Yaw 180
+	# Flow: Yaw 180.
 	param set SENS_FLOW_ROT 4
-	# TFMini on TELEM3
+	# TFMini on TEL3.
 	param set SENS_TFMINI_CFG 103
 
-	# Smart Battery
-	param set SENS_EN_BATT 1
-
-	# EKF2
-	param set EKF2_AID_MASK 3
+	# EKF2.
+	param set EKF2_AID_MASK 3	# Flow aid default on.
 	param set EKF2_GND_EFF_DZ 6.0
 	param set EKF2_HGT_MODE 1
 	param set EKF2_MIN_RNG 0.3
 	param set EKF2_RNG_AID 1
 
-	# Flow
+	# Flow.
 	param set EKF2_OF_QMIN 70
 
-	# Position control
-	param set MPC_Z_P 1.10000
-	param set MPC_Z_VEL_P 0.30000
-	param set MPC_Z_VEL_I 0.05000
-	param set MPC_Z_VEL_D 0.00000
+	# Position control gains.
+	param set MPC_Z_P 1.1
+	param set MPC_Z_VEL_P 0.3
+	param set MPC_Z_VEL_I 0.05
+	param set MPC_Z_VEL_D 0.0
 
-	param set MPC_THR_MIN 0.06000
-	param set MPC_THR_HOVER 0.4400
+	param set MPC_THR_MIN 0.06
+	param set MPC_THR_HOVER 0.44
 
-	param set MIS_TAKEOFF_ALT 1.1000
-	param set MPC_XY_P 1.7000
-	param set MPC_XY_VEL_P 0.1300
-	param set MPC_XY_VEL_I 0.0600
-	param set MPC_XY_VEL_D 0.0100
-	param set MPC_TKO_RAMP_T 1.0000
-	param set MPC_TKO_SPEED 1.1000
-	param set MPC_VEL_MANUAL 3.0000
+	param set MIS_TAKEOFF_ALT 1.1
+	param set MPC_XY_P 1.7
+	param set MPC_XY_VEL_P 0.13
+	param set MPC_XY_VEL_I 0.06
+	param set MPC_XY_VEL_D 0.01
+	param set MPC_TKO_RAMP_T 1.0
+	param set MPC_TKO_SPEED 1.1
+	param set MPC_VEL_MANUAL 3.0
 
-	param set BAT_SOURCE 0
-	param set BAT_N_CELLS 4
-	param set BAT_V_DIV 10.14
-	param set BAT_A_PER_V 18.18
-	#param set CBRK_IO_SAFETY 22027
+	# SMBUS-based smart battery
+	param set SENS_EN_BATT 1	# enable batt_smbus.
+
+	# Battery - analog fallback
+	param set BAT1_SOURCE 1		# set first battery source as external.
+	param set BAT1_N_CELLS 4	# IFO-S is using 4 cells. This will be for analog fallback when smbus is not working.
+	param set BAT1_CAPACITY 4800	# IFO-S is using 4800 mAh pack.
+	param set BAT1_V_DIV 10.14	# UVify Core internal ADC divider.
+	param set BAT1_A_PER_V 18.18	# UVify Core internal multiplier for shunt resistor for Amp.
+	param set BAT1_V_CHANNEL -1	# Reset to voltage channel board default.
+	param set BAT1_I_CHANNEL -1	# Reset to current channel board default.
+
+	# Other params
 	param set COM_ARM_EKF_AB 0.00500
 	param set COM_DISARM_LAND 2
 
@@ -121,7 +119,7 @@ then
 	param set NAV_RCL_ACT 6
 
 	# enable to use high-rate logging for better rate tracking analysis
-	# param set SDLOG_PROFILE 19
+	param set SDLOG_PROFILE 163 # default, EKF2, Debug, Computer Vision and Avoidance.
 
 	# TELEM1 ttyS1 - Wifi module
 	param set MAV_0_CONFIG 101
