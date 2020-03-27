@@ -69,7 +69,8 @@ then
 	param set SENS_TFMINI_CFG 103
 
 	# EKF2.
-	param set EKF2_AID_MASK 3	# Flow aid default on.
+	# Flow aid default on.
+	param set EKF2_AID_MASK 3	
 	param set EKF2_GND_EFF_DZ 6.0
 	param set EKF2_HGT_MODE 1
 	param set EKF2_MIN_RNG 0.3
@@ -96,18 +97,28 @@ then
 	param set MPC_TKO_SPEED 1.1
 	param set MPC_VEL_MANUAL 3.0
 
-	# SMBUS-based smart battery
-	param set SENS_EN_BATT 1	# enable batt_smbus.
-	param set BAT_C_MULT	5.0	# UVify smart battery has 5.0x multipliea for both current and capacity.
+	###############################
+	# SMBus-based smart battery
+	###############################
+	# Enable batt_smbus.
+	param set SENS_EN_BATT 1
+	# UVify smart battery has 5.0x multiplier for both current and capacity.
+	param set BAT_C_MULT   5.0
 
+	###############################
 	# Battery - analog fallback
-	param set BAT1_SOURCE 1		# set first battery source as external.
-	param set BAT1_N_CELLS 4	# IFO-S is using 4 cells. This will be for analog fallback when smbus is not working.
-	param set BAT1_CAPACITY 4800	# IFO-S is using 4800 mAh pack.
-	param set BAT1_V_DIV 10.14	# UVify Core internal ADC divider.
-	param set BAT1_A_PER_V 18.18	# UVify Core internal multiplier for shunt resistor for Amp.
-	param set BAT1_V_CHANNEL -1	# Reset to voltage channel board default.
-	param set BAT1_I_CHANNEL -1	# Reset to current channel board default.
+	###############################
+	# Current PX4's BAT{$i}_* params not working well, so I fallback to deprecated parameter set first.
+	# set first battery source as internal.
+	param set BAT_SOURCE 0
+	# IFO-S is using 4 cells. This will be for analog fallback when smbus is not working.
+	param set BAT_N_CELLS 4
+	# IFO-S is using 4800 mAh pack.
+	param set BAT_CAPACITY 4800
+	# UVify Core internal ADC divider.
+	param set BAT_V_DIV 10.14
+	# UVify Core internal multiplier for shunt resistor for Amp.
+	param set BAT_A_PER_V 18.18
 
 	# Other params
 	param set COM_ARM_EKF_AB 0.00500
@@ -120,17 +131,19 @@ then
 	param set NAV_RCL_ACT 6
 
 	# enable to use high-rate logging for better rate tracking analysis
-	param set SDLOG_PROFILE 163 # default, EKF2, Debug, Computer Vision and Avoidance.
-
+	# default, EKF2, Debug, Computer Vision and Avoidance.
+	param set SDLOG_PROFILE 163 
 	# TELEM1 ttyS1 - Wifi module
 	param set MAV_0_CONFIG 101
 	param set MAV_0_RATE 0
-	param set MAV_0_MODE 2	# onboard
+	# onboard
+	param set MAV_0_MODE 2
 	param set SER_TEL1_BAUD 921600
 
 	# TELEM2 ttyS2 - Sub 1-Ghz
 	param set MAV_1_CONFIG 102
-	param set MAV_1_MODE 0	# normal
+	# normal
+	param set MAV_1_MODE 0
 	param set SER_TEL2_BAUD 57600
 
 	# DSHOT
