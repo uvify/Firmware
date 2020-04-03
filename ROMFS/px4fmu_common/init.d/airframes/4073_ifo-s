@@ -127,9 +127,6 @@ then
 	# Filter settings
 	param set IMU_GYRO_CUTOFF 90.00000
 
-	# Don't try to be intelligent on RC loss: just cut the motors
-	param set NAV_RCL_ACT 6
-
 	# enable to use high-rate logging for better rate tracking analysis
 	# default, EKF2, Debug, Computer Vision and Avoidance.
 	param set SDLOG_PROFILE 163 
