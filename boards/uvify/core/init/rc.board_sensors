@@ -5,11 +5,21 @@
 
 adc start
 
-# Internal SPI
+# Internal SPI, possible barometer
 if ! ms5611 -T 5607 -s start
 then
 	ms5611 -s start
 fi
+
+# Possible magnetometer (connected to I2C1 bus, but external)
+bmm150 -X -R 2 start
+
+# Possible IMU
+icm20689 -s -R 2 start
+
+# Possible IMU
+bmi055 -A -s -R 2 start
+bmi055 -G -s -R 2 start
 
 # Draco-R
 if param compare SYS_AUTOSTART 6002

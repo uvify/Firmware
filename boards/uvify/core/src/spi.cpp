@@ -35,13 +35,27 @@
 #include <drivers/drv_sensor.h>
 #include <nuttx/spi/spi.h>
 
+// FRAM_CS PD10
+// FLOW_CS PB12
+// 
+// IMU_CS1 PC2  --- ICM20689_CS (MPU9250 switchable)
+// IMU_CS2 PE15 --- BMI055_ACC_CS
+// IMU_CS3 PD7  --- IMU_BARO_CS
+// IMU_CS4 PC15 --- BMI055_GYRO_CS
+//
+// IMU_DRDY1 PD15 --- ICM20689_DRDY (MPU9250 switchable)
+// IMU_DRDY2 PE12 --- BMI055_ACC_INT
+// IMU_DRDY3 PC14 --- BMI055_GYRO_INT
+//
+// VDD_3V3_IMU_EN PE3
+
 constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI1, {
 		initSPIDevice(DRV_IMU_DEVTYPE_MPU9250, SPI::CS{GPIO::PortC, GPIO::Pin2}, SPI::DRDY{GPIO::PortD, GPIO::Pin15}),
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM20602, SPI::CS{GPIO::PortC, GPIO::Pin15}, SPI::DRDY{GPIO::PortC, GPIO::Pin14}),
-		initSPIDevice(DRV_IMU_DEVTYPE_ICM20608G, SPI::CS{GPIO::PortC, GPIO::Pin15}, SPI::DRDY{GPIO::PortC, GPIO::Pin14}),
-		initSPIDevice(DRV_MAG_DEVTYPE_HMC5883, SPI::CS{GPIO::PortE, GPIO::Pin15}, SPI::DRDY{GPIO::PortE, GPIO::Pin12}), // hmc5983
-	}, {GPIO::PortE, GPIO::Pin3}),
+		initSPIDevice(DRV_IMU_DEVTYPE_ICM20689, SPI::CS{GPIO::PortC, GPIO::Pin2}, SPI::DRDY{GPIO::PortD, GPIO::Pin15}),
+		initSPIDevice(DRV_GYR_DEVTYPE_BMI055, SPI::CS{GPIO::PortC, GPIO::Pin15}, SPI::DRDY{GPIO::PortC, GPIO::Pin14}),
+		initSPIDevice(DRV_ACC_DEVTYPE_BMI055, SPI::CS{GPIO::PortE, GPIO::Pin15}, SPI::DRDY{GPIO::PortE, GPIO::Pin12}),
+	}, {GPIO::PortE, GPIO::Pin3}), // power_enable
 	initSPIBus(SPI::Bus::SPI2, {
 		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortD, GPIO::Pin10}),
 		initSPIDevice(DRV_BARO_DEVTYPE_MS5611, SPI::CS{GPIO::PortD, GPIO::Pin7}),

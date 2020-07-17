@@ -25,6 +25,8 @@ px4_add_board(
 		imu/invensense/icm20602
 		imu/invensense/icm20608g
 		imu/invensense/mpu9250
+		imu/invensense/icm20689
+		imu/bosch/bmi055
 		irlock
 		lights/rgbled_ncp5623c
 		magnetometer/bmm150
