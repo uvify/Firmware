@@ -77,6 +77,7 @@ then
 	param set PWM_RATE 0
 
 	param set SENS_BOARD_ROT 2
+	param set SENS_EXT_I2C_PRB 0
 
 	param set BAT_SOURCE 0
 	param set CBRK_IO_SAFETY 22027

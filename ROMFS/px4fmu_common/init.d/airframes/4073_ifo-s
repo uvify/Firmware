@@ -70,6 +70,7 @@ then
 
 	# Sensors
 	param set SENS_BOARD_ROT 10
+	param set SENS_EXT_I2C_PRB 0
 	# Yaw 180
 	param set SENS_FLOW_ROT 4
 	# TFMini on TELEM3

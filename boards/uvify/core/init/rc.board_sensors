@@ -12,7 +12,7 @@ then
 fi
 
 # Possible magnetometer (connected to I2C1 bus, but external)
-bmm150 -X -R 2 start
+bmm150 -X -b 1 -R 0 start
 
 # Possible IMU
 icm20689 -s -R 2 start
@@ -50,7 +50,7 @@ then
 	pca9685 -X start
 
 	mpu9250 start -s -R 8
-	lis3mdl start -R 2 -X
+	lis3mdl start -R 2 -I
 fi
 
 # IFO-S
@@ -61,7 +61,7 @@ then
 
 	# IMU
 	mpu9250 start -s -R 8
-	lis3mdl start -R 2 -X
+	lis3mdl start -R 2 -I
 
 	# FLOW on SPI2
 	pmw3901 start -s -b 2
